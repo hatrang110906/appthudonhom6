@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Công Cụ Thay Đổi Trang Phục Mẫu</title>
+    <style>
+        /* CSS phong cách Tối giản / Apple-like */
+        
+        :root {
+            --apple-black: #292929;
+            --apple-gray: #f5f5f7;
+            --apple-link-blue: #007aff;
+            --border-radius: 12px;
+            --apple-green: #30D158; /* Màu xanh lá Apple */
+        }
+
+        body {
+            /* Font chữ tương tự phong cách Apple */
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display";
+            margin: 0;
+            padding: 30px 0;
+            background-color: var(--apple-gray); /* Nền xám nhạt */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--apple-black);
+            font-weight: bold;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            font-weight: bold; /* Semibold */
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            /* Bóng mờ tinh tế (Apple-like shadow) */
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); 
+            width: 100%;
+            max-width: 960px; /* Chiều rộng lớn hơn */
+            display: flex;
+            gap: 40px;
+            font-weight: bold;
+        }
+
+        .controls {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            font-weight: bold;
+        }
+
+        h2 {
+            font-size: 1.2em;
+            font-weight: bold; /* Medium */
+            margin: 0 0 10px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eaeaef; /* Đường gạch nhẹ */
+        }
+        
+        .display-box {
+            flex: 2;
+            background-color: #f0f0f5; /* Nền ảnh hơi xám */
+            min-height: 500px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            border-radius: var(--border-radius);
+            /* Bổ sung: Vị trí tương đối để đặt lớp phủ loading */
+            position: relative; 
+            border: 4px solid transparent; /* Viền trong suốt mặc định */
+            transition: box-shadow 0.3s ease-out;
+        }
+        
+        /* Hiệu ứng Viền Ánh Sáng (Apple Intelligence-like) */
+        .display-box.loading {
+            /* Tắt bóng mờ mặc định để làm nổi bật viền */
+            box-shadow: none !important; 
+            /* Dùng Box-shadow để tạo viền sáng lấp lánh (màu xanh dương, xanh lá, tím) */
+            animation: glow-effect 1.5s infinite alternate; 
+        }
+
+        @keyframes glow-effect {
+            0% {
+                box-shadow: 
+                    0 0 10px rgba(0, 122, 255, 0.6), /* Xanh dương */
+                    0 0 20px rgba(48, 209, 88, 0.4);  /* Xanh lá */
+            }
+            50% {
+                 box-shadow: 
+                    0 0 10px rgba(48, 209, 88, 0.6), /* Xanh lá */
+                    0 0 20px rgba(191, 90, 242, 0.4); /* Tím */
+            }
+            100% {
+                box-shadow: 
+                    0 0 10px rgba(191, 90, 242, 0.6), /* Tím */
+                    0 0 20px rgba(0, 122, 255, 0.4);  /* Xanh dương */
+            }
+        }
+        
+        /* Lớp phủ mờ và biểu tượng quay */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.6); /* Lớp mờ nhẹ */
+            display: none; /* Mặc định ẩn */
+            justify-content: center;
+            align-items: center;
+            border-radius: var(--border-radius);
+            z-index: 10;
+        }
+
+        .loading-spinner {
+            border: 5px solid #f3f3f3; /* Màu xám nhạt */
+            border-top: 5px solid var(--apple-link-blue); /* Màu xanh Apple */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+
+        #modelImage {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            display: none; 
+        }
+
+        .placeholder {
+            color: #b0b0b5;
+            font-size: 1.1em;
+            font-style: italic;
+        }
+
+        /* Styling cho Input File (Tải ảnh) */
+        input[type="file"] {
+            display: block;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #fdfdfd;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Styling cho Select (Danh sách chọn) */
+        select {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            background-color: white;
+            cursor: pointer;
+            appearance: none; /* Bỏ giao diện mặc định */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"><path fill="%231d1d1f" d="M7 10l5 5 5-5z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            font-size: 1em;
+            font-weight: bold;
+            color:#484848;
+            margin-bottom: 20px; /* Thêm khoảng cách trước nút */
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: var(--apple-link-blue);
+            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.3);
+            color: #484848;
+        }
+        
+        /* Styling cho nút "Try On" mới */
+        #tryOnButton {
+            padding: 14px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            background-color: var(--apple-link-blue); /* Màu xanh dương Apple */
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s, opacity 0.2s, transform 0.1s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #tryOnButton:hover:not(:disabled) {
+            background-color: #006ee6; /* Màu đậm hơn khi hover */
+        }
+        
+        #tryOnButton:active:not(:disabled) {
+            transform: scale(0.98); /* Hiệu ứng nhấn */
+        }
+        
+        #tryOnButton:disabled {
+            background-color: #b0b0b5; /* Màu xám khi bị vô hiệu hóa */
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>KHỞI NGHIỆP - NHÓM 6<br>
+        CÔNG CỤ THAY ĐỔI TRANG PHỤC MẪU</h1>
+
+    <div class="container">
+        <div class="controls">
+            <h2>1. Tải lên Ảnh Mẫu</h2>
+            <input type="file" id="imageUpload" accept="image/*">
+            
+            <h2>2. Chọn Outfit</h2>
+            <select id="outfitSelector">
+                <option value="original" selected>Ảnh Gốc</option>
+                <option value="outfit1">Outfit 1</option>
+                <option value="outfit2">Outfit 2</option>
+                <option value="outfit3">Outfit 3</option>
+                <option value="outfit4">Outfit 4</option>
+            </select>
+            
+            <h2>3. Thực hiện Thử đồ</h2>
+            <button id="tryOnButton" disabled>TRY ON</button>
+            
+        </div>
+        
+        <div class="display-box" id="displayBox">
+            <div class="loading-overlay" id="loadingOverlay">
+                <div class="loading-spinner"></div>
+            </div>
+            
+            <img id="modelImage" alt="Ảnh Model" style="display: none;">
+            <p id="placeholderText" class="placeholder">Vui lòng tải ảnh mẫu lên...</p>
+        </div>
+    </div>
+
+<script>
+        // Địa chỉ URL mẫu cho các Outfit 
+        const outfitUrls = {
+            outfit1: 'outfit/outfit1.png',
+            outfit2: 'outfit/outfit2.png',
+            outfit3: 'outfit/outfit3.png',
+            outfit4: 'outfit/outfit4.png', 
+        };
+        
+        const imageUpload = document.getElementById('imageUpload');
+        const outfitSelector = document.getElementById('outfitSelector');
+        const modelImage = document.getElementById('modelImage');
+        const placeholderText = document.getElementById('placeholderText');
+        const tryOnButton = document.getElementById('tryOnButton'); 
+        const displayBox = document.getElementById('displayBox'); 
+        const loadingOverlay = document.getElementById('loadingOverlay'); 
+        
+        let originalImageUrl = ''; 
+        let selectedOutfitTarget = ''; 
+        
+        // Cập nhật trạng thái nút Try On
+        function updateTryOnButtonState() {
+            // Nút chỉ được bật khi: 
+            // 1. Đã có ảnh gốc (originalImageUrl) 
+            // VÀ 
+            // 2. Lựa chọn KHÔNG phải là "Ảnh Gốc" (selectedOutfitTarget !== 'original')
+            const isOriginal = outfitSelector.value === 'original';
+            tryOnButton.disabled = !originalImageUrl || isOriginal;
+            selectedOutfitTarget = isOriginal ? '' : outfitSelector.value;
+        }
+
+        // 1. Xử lý khi Tải lên ảnh Model
+        imageUpload.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Thu hồi URL cũ để tránh rò rỉ bộ nhớ
+                if (originalImageUrl) URL.revokeObjectURL(originalImageUrl);
+                
+                // Tạo URL tạm thời mới cho ảnh đã upload
+                originalImageUrl = URL.createObjectURL(file);
+                modelImage.src = originalImageUrl;
+                modelImage.style.display = 'block';
+                placeholderText.style.display = 'none';
+                
+                // Đặt lại danh sách chọn về "Ảnh Gốc"
+                outfitSelector.value = 'original';
+                
+                // Cập nhật trạng thái nút
+                updateTryOnButtonState();
+            }
+        });
+
+        // 2. Xử lý khi Thay đổi lựa chọn Outfit
+        outfitSelector.addEventListener('change', function() {
+            const selectedValue = outfitSelector.value;
+            
+            if (selectedValue === 'original') {
+                if (originalImageUrl) {
+                    // Hiển thị ngay ảnh gốc
+                    modelImage.src = originalImageUrl;
+                }
+            } else {
+                // Nếu chưa có ảnh gốc, quay về "Ảnh Gốc" và thông báo
+                if (!originalImageUrl) {
+                    alert("Vui lòng tải lên ảnh mẫu trước khi chọn Outfit.");
+                    outfitSelector.value = 'original';
+                }
+                // Giữ nguyên ảnh gốc cho đến khi nhấn "Try On"
+            }
+            
+            // Cập nhật trạng thái nút
+            updateTryOnButtonState();
+        });
+        
+        // 3. Xử lý khi nhấn nút "Try On" (Mô phỏng AI)
+        tryOnButton.addEventListener('click', function() {
+            if (!originalImageUrl) {
+                alert("Vui lòng tải lên ảnh mẫu trước.");
+                return;
+            }
+            if (outfitSelector.value === 'original') {
+                alert("Vui lòng chọn một Outfit khác 'Ảnh Gốc' để thử.");
+                return;
+            }
+
+            // Vô hiệu hóa nút và Select trong lúc xử lý
+            tryOnButton.disabled = true;
+            outfitSelector.disabled = true;
+            
+            // Bắt đầu hiệu ứng loading (Apple Intelligence-like)
+            displayBox.classList.add('loading');
+            loadingOverlay.style.display = 'flex'; // Hiển thị lớp phủ
+
+            // Thiết lập thời gian chờ (Mô phỏng AI xử lý 3-4 giây)
+            const processingTime = Math.random() * 1000 + 3000; // 3000ms - 4000ms
+            
+            setTimeout(() => {
+                // Kết thúc hiệu ứng loading
+                displayBox.classList.remove('loading');
+                loadingOverlay.style.display = 'none'; // Ẩn lớp phủ
+                
+                // Sau khi xử lý xong, tải ảnh outfit đã chọn
+                const targetOutfitUrl = outfitUrls[selectedOutfitTarget];
+                
+                // Mô phỏng kết quả: tải ảnh outfit đã chọn
+                modelImage.src = targetOutfitUrl;
+                
+                // Kích hoạt lại nút và Select
+                outfitSelector.disabled = false;
+                updateTryOnButtonState(); 
+                
+                // Đã BỎ thông báo alert thành công ở đây
+                
+            }, processingTime);
+        });
+
+        // Khởi tạo ban đầu để đảm bảo nút ở trạng thái chính xác
+        updateTryOnButtonState();
+    </script>
+</body>
+</html>
